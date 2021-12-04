@@ -19,12 +19,11 @@
    "01010"])
 
 
+; part 1
 (defn parse-input [report]
   (apply mapv vector
          (map #(str/split % #"") report)))
 
-
-; part 1
 (defn get-gamma-rate [report-parsed]
   (Integer/parseInt
    (str/join
@@ -46,7 +45,6 @@
 
 
 ; part 2
-
 (defn get-oxygen-rate [report]
   (loop [cnt 0
          acc report]
