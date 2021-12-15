@@ -24,20 +24,18 @@
   (apply mapv vector
          (map #(str/split % #"") report)))
 
-(defn get-gamma-rate [report-parsed]
+(def get-gamma-bit #(->> % frequencies (sort-by val) last key))
+
+(def get-epsilon-bit #(->> % frequencies (sort-by val) first key))
+
+(defn get-power-rate [report-parsed fn-rate-selector]
   (Integer/parseInt
    (str/join
-    (map #(->> % frequencies (sort-by val) last key)
-         report-parsed)) 2))
-
-(defn get-epsilon-rate [report-parsed]
-   (Integer/parseInt
-    (str/join
-     (map #(->> % frequencies (sort-by val) first key)
-          report-parsed)) 2))
+    (map fn-rate-selector report-parsed)) 2))
 
 (defn calc-power-consumption [report]
-  (* (get-epsilon-rate report) (get-gamma-rate report)))
+  (* (get-power-rate report get-gamma-bit) 
+     (get-power-rate report get-epsilon-bit)))
 
 (println
  "Power consumption:"
@@ -45,28 +43,27 @@
 
 
 ; part 2
-(defn get-oxygen-rate [report]
-  (loop [cnt 0
-         acc report]
-    (let [most-commom (->> (map #(get % cnt) acc)
-                           frequencies
-                           (sort-by (juxt val key)) last key)]
-      (if (= (count acc) 1)
-        (Integer/parseInt (apply str acc) 2)
-        (recur (inc cnt) (filter #(= (get % cnt) most-commom) acc))))))
+(defn get-oxygen-bit [col report]
+  (->> (map #(get % col) report)
+       frequencies
+       (sort-by (juxt val key)) last key))
 
-(defn get-co2-rate [report]
+(defn get-co2-bit [col report]
+  (->> (map #(get % col) report)
+       frequencies
+       (sort-by (juxt val key)) reverse last key))
+
+(defn get-life-support-rate [report fn-rate-selector]
   (loop [cnt 0
          acc report]
-    (let [most-commom (->> (map #(get % cnt) acc)
-                           frequencies
-                           (sort-by (juxt val key)) reverse last key)]
+    (let [most-commom (fn-rate-selector cnt acc)]
       (if (= (count acc) 1)
         (Integer/parseInt (apply str acc) 2)
         (recur (inc cnt) (filter #(= (get % cnt) most-commom) acc))))))
 
 (defn calc-life-support [report]
-  (* (get-co2-rate report) (get-oxygen-rate report)))
+  (* (get-life-support-rate report get-oxygen-bit) 
+     (get-life-support-rate report get-co2-bit)))
 
 (println "Life support rating:"
          (calc-life-support all-records))
